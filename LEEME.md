@@ -85,28 +85,28 @@ yt-dlp --skip-download --write-subs --sub-langs live_chat -o directo "<URL_YOUTU
 Analiza el chat y muestra los comandos sugeridos:
 
 ```bash
-node chat-clips.mjs chat.json --vod <ID_DEL_VOD> --vertical
-node chat-clips.mjs directo.live_chat.json --url "<URL_YOUTUBE>" --vertical
+stream-clip-maker chat.json --vod <ID_DEL_VOD> --vertical
+stream-clip-maker directo.live_chat.json --url "<URL_YOUTUBE>" --vertical
 ```
 
 Ejecuta los comandos y crea los clips:
 
 ```bash
-node chat-clips.mjs chat.json --vod <ID_DEL_VOD> --vertical --run --out clips
-node chat-clips.mjs directo.live_chat.json --url "<URL_YOUTUBE>" --vertical --run --out clips
-node chat-clips.mjs chat.json --video grabacion.mp4 --vertical --run --out clips
+stream-clip-maker chat.json --vod <ID_DEL_VOD> --vertical --run --out clips
+stream-clip-maker directo.live_chat.json --url "<URL_YOUTUBE>" --vertical --run --out clips
+stream-clip-maker chat.json --video grabacion.mp4 --vertical --run --out clips
 ```
 
 Para revisar el plan sin descargar ni renderizar vídeos, usa `--preview`. El plan queda en `moments.json`, incluso si también se indica `--run`:
 
 ```bash
-node chat-clips.mjs chat.json --vod <ID_DEL_VOD> --preview --run --out clips
+stream-clip-maker chat.json --vod <ID_DEL_VOD> --preview --run --out clips
 ```
 
 Después, `--select` permite renderizar solo los momentos elegidos (números de la lista, empezando por 1):
 
 ```bash
-node chat-clips.mjs chat.json --vod <ID_DEL_VOD> --select 1,3 --vertical --run --out clips
+stream-clip-maker chat.json --vod <ID_DEL_VOD> --select 1,3 --vertical --run --out clips
 ```
 
 Todas las opciones:
