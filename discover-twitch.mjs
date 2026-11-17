@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 
 const API = "https://api.twitch.tv/helix";
 const CLIENT_ID = process.env.TWITCH_CLIENT_ID;
@@ -119,7 +119,8 @@ async function main() {
     authorizationMode: "editor_permission_confirmed_by_user",
     note: "Los permisos de edición/publicación han sido confirmados por el usuario. La búsqueda incluye directos y VODs archivados; el descubrimiento de Twitch no determina por sí solo el estado de cada permiso.",
   };
-  const outputPath = process.env.STREAM_CLIP_DISCOVERY_OUT || new URL("./discovery.json", import.meta.url);
+  const outputPath = process.env.STREAM_CLIP_DISCOVERY_OUT || new URL("./workspace/discovery/discovery.json", import.meta.url);
+  mkdirSync(new URL("./workspace/discovery/", import.meta.url), { recursive: true });
   writeFileSync(outputPath, JSON.stringify(result, null, 2));
   console.log(JSON.stringify({
     topic, categories: result.categories.map(c => c.name),
@@ -128,7 +129,7 @@ async function main() {
       ({ login, title, category, language, viewers, authorized })),
     vods: vods.slice(0, 20).map(({ vodId, login, title, category, language, createdAt, duration, views, url }) =>
       ({ vodId, login, title, category, language, createdAt, duration, views, url })),
-    saved: "discovery.json",
+    saved: String(outputPath),
   }, null, 2));
 }
 

@@ -5,7 +5,8 @@ import { spawn } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const CONFIG_DIR = process.env.STREAM_CLIP_CONFIG_DIR || path.dirname(fileURLToPath(import.meta.url));
+const ROOT_DIR = path.dirname(fileURLToPath(import.meta.url));
+const CONFIG_DIR = process.env.STREAM_CLIP_CONFIG_DIR || path.join(ROOT_DIR, 'config', 'private');
 fs.mkdirSync(CONFIG_DIR, { recursive: true });
 const secretsPath = path.join(CONFIG_DIR, 'client_secrets.json');
 const tokenPath = path.join(CONFIG_DIR, 'youtube-token.json');

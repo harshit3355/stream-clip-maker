@@ -30,7 +30,7 @@ const askSelect = async (message, options) => cancelled(await select({ message, 
 const askConfirm = async (message, initialValue = false) => cancelled(await confirm({ message, initialValue }));
 
 function loadEnvFile() {
-  const path = resolve(ROOT, ".env");
+  const path = resolve(ROOT, "config/private/.env");
   if (!existsSync(path)) return;
   for (const line of readFileSync(path, "utf8").split(/\r?\n/)) {
     const match = line.match(/^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)\s*$/);
@@ -59,15 +59,15 @@ async function searchStreams() {
   note("We'll look for live channels and archived VODs. Finding a stream does NOT grant permission to reuse its content.", "Before you search");
   if (!await askConfirm(`Search Twitch for "${topic}" now?`, false)) return;
   const result = spawnSync(process.execPath, [resolve(ROOT, "discover-twitch.mjs"), topic], {
-    cwd: process.cwd(), stdio: "inherit", env: { ...process.env, STREAM_CLIP_DISCOVERY_OUT: resolve(process.cwd(), "discovery.json") },
+    cwd: process.cwd(), stdio: "inherit", env: { ...process.env, STREAM_CLIP_DISCOVERY_OUT: resolve(ROOT, "workspace/discovery/discovery.json") },
   });
   if (result.error) throw result.error;
-  if (result.status === 0) outro(`Search complete. Results saved to ${resolve(process.cwd(), "discovery.json")}. Check creator permissions before using any video.`);
+  if (result.status === 0) outro(`Search complete. Results saved to ${resolve(ROOT, "workspace/discovery/discovery.json")}. Check creator permissions before using any video.`);
   else note(`Search exited with code ${result.status ?? "unknown"}.`, "Search finished");
 }
 
 async function createClips() {
-  const chat = await askText("Chat replay file (JSON or JSONL)", "./chat.json", (v) => v.trim() ? undefined : "Choose a chat file.");
+  const chat = await askText("Chat replay file (JSON or JSONL)", resolve(ROOT, "workspace/chats/chat.json"), (v) => v.trim() ? undefined : "Choose a chat file.");
   if (!existsSync(resolve(chat))) {
     note(`I couldn't find: ${resolve(chat)}`, "File not found");
     return;
@@ -84,7 +84,7 @@ async function createClips() {
   if (source === "local") args.push("--video", await askText("Video file path", "./stream.mp4", (v) => existsSync(resolve(v)) ? undefined : "I couldn't find that video."));
   const top = await askText("How many highlight moments should we keep?", "10", (v) => /^\d+$/.test(v) && Number(v) > 0 ? undefined : "Enter a number greater than zero.");
   const vertical = await askConfirm("Create vertical 9:16 videos for Shorts / Reels / TikTok?", true);
-  const output = await askText("Where should we save the results?", "./clips");
+  const output = await askText("Where should we save the results?", resolve(ROOT, "workspace/clips"));
   args.push("--top", top, "--out", output);
   if (vertical) args.push("--vertical");
   if (source !== "analysis") {
@@ -99,7 +99,7 @@ async function createClips() {
 }
 
 async function addCaptions() {
-  const input = await askText("Choose an existing vertical MP4", "./clip_9x16.mp4", (v) => existsSync(resolve(v)) ? undefined : "I couldn't find that video.");
+  const input = await askText("Choose an existing vertical MP4", resolve(ROOT, "workspace/clips/clip_9x16.mp4"), (v) => existsSync(resolve(v)) ? undefined : "I couldn't find that video.");
   const title = await askText("Text to show at the top of the video", "BEST MOMENT");
   note("This step uses Whisper.cpp to create Spanish subtitles and FFmpeg to burn them into the video. It may take a few minutes.", "Caption requirements");
   if (!await askConfirm("Start transcription and video rendering?", false)) return;
@@ -129,7 +129,7 @@ async function shareVideo() {
     { value: "back", label: "Back to main menu" },
   ]);
   if (action !== "upload") return;
-  const video = await askText("Path to your finished _final.mp4 file", "./clips/clip_final.mp4", (v) => v.endsWith("_final.mp4") && existsSync(resolve(v)) ? undefined : "Choose an existing file whose name ends with _final.mp4.");
+  const video = await askText("Path to your finished _final.mp4 file", resolve(ROOT, "workspace/clips/clip_final.mp4"), (v) => v.endsWith("_final.mp4") && existsSync(resolve(v)) ? undefined : "Choose an existing file whose name ends with _final.mp4.");
   const title = await askText("YouTube title", "My highlight #Shorts", (v) => v.trim() ? undefined : "Enter a title.");
   const description = await askText("Description (optional)", "Clip with subtitles #Shorts");
   const tags = await askText("Tags separated by commas (optional)", "gaming,highlights,shorts");
@@ -154,7 +154,7 @@ async function showGuide(topic) {
       "",
       "1. SET UP: connect Twitch for stream discovery and YouTube for uploads.",
       "2. SEARCH: find a game/category and review live streams or archived VODs.",
-      "3. GET CHAT: download the Twitch chat replay with TwitchDownloaderCLI, or a YouTube live-chat replay with yt-dlp.",
+      "3. GET CHAT: use the bundled TwitchDownloaderCLI through make-clips.sh, or yt-dlp for a YouTube live-chat replay.",
       "4. CREATE: analyze the chat to find reaction spikes, then render selected moments as vertical 9:16 clips.",
       "5. CAPTIONS: use Whisper.cpp + FFmpeg to create Spanish subtitles and add a title.",
       "6. SHARE: upload the finished _final.mp4 privately, review it in YouTube Studio, then publish manually.",
@@ -168,8 +168,8 @@ async function showGuide(topic) {
       "2. Register a new application. Give it a name such as Stream Clip Maker.",
       "3. Choose an appropriate category and set OAuth Redirect URL to http://localhost (the discovery tool uses the app client credentials flow).",
       "4. Create the app and copy its Client ID and Client Secret.",
-      "5. In the project folder, copy .env.example to .env.",
-      "6. Open .env and fill in TWITCH_CLIENT_ID=... and TWITCH_CLIENT_SECRET=...",
+      "5. Copy .env.example to config/private/.env.",
+      "6. Open config/private/.env and fill in TWITCH_CLIENT_ID=... and TWITCH_CLIENT_SECRET=...",
       "7. Save it. Keep .env private; never commit it or send the secret to anyone.",
       "8. Return to Search. Enter a game/category and start the search.",
       "",
@@ -183,10 +183,10 @@ async function showGuide(topic) {
       "3. Configure the OAuth consent screen and add your Google account as a test user if Google requests it.",
       "4. In APIs & Services → Credentials, create an OAuth Client ID.",
       "5. Choose Desktop app, create it, and download the JSON file.",
-      "6. Put that downloaded file in the project folder and name it client_secrets.json.",
+      "6. Put that downloaded file in config/private/ and name it client_secrets.json.",
       "7. In Termux, run: node youtube-auth.mjs",
       "8. Open the Google authorization page, sign in, approve access, then return to Termux.",
-      "9. The local token is saved as youtube-token.json. Keep both JSON files private.",
+      "9. The local token is saved in config/private/youtube-token.json. Keep both JSON files private.",
       "",
       "The uploader sends videos as PRIVATE. You choose Public or Schedule later in YouTube Studio.",
     ],
@@ -194,9 +194,9 @@ async function showGuide(topic) {
       "GET A CHAT REPLAY",
       "",
       "TWITCH:",
-      "1. Install TwitchDownloaderCLI.",
-      "2. Run: TwitchDownloaderCLI chatdownload --id VOD_ID -o chat.json",
-      "3. Use chat.json in Create.",
+      "1. TwitchDownloaderCLI is already bundled in tools/TwitchDownloaderCLI-bin/.",
+      "2. Preferred one-link workflow: TOP=3 ./make-clips.sh https://www.twitch.tv/videos/VOD_ID",
+      "3. The helper runs the CLI through Debian PRoot because its binary needs glibc; the project and Node workflow stay in Termux.",
       "",
       "YOUTUBE:",
       "1. Install yt-dlp.",
@@ -215,7 +215,7 @@ async function showGuide(topic) {
       "5. The app transcribes Spanish speech, creates an SRT subtitle file, then burns the title and captions into a new video.",
       "6. Your final file ends in _final.mp4.",
       "",
-      "On this Android setup, the helper expects Whisper at ~/whisper.cpp/build/bin/whisper-cli and the model at ~/whisper.cpp/models/ggml-base.bin.",
+      "On this Android setup, Whisper is bundled at tools/whisper.cpp/build/bin/whisper-cli and the model at tools/whisper.cpp/models/ggml-base.bin.",
     ],
     publish: [
       "UPLOAD AND PUBLISH",
@@ -248,11 +248,20 @@ async function setupHelp() {
 }
 
 async function checkTools() {
-  const checks = ["node", "ffmpeg", "ffprobe", "yt-dlp", "TwitchDownloaderCLI"];
+  const checks = ["node", "ffmpeg", "ffprobe", "yt-dlp"];
   const rows = checks.map((name) => {
-    const result = spawnSync("sh", ["-lc", `command -v ${name}`], { encoding: "utf8" });
-    return `${result.status === 0 ? "✓" : "–"} ${name}${result.status === 0 ? `  ${result.stdout.trim()}` : "  not found (may be optional for your workflow)"}`;
+    const result = spawnSync("sh", ["-lc", "command -v " + name], { encoding: "utf8" });
+    return (result.status === 0 ? "✓ " : "– ") + name + (result.status === 0 ? "  " + result.stdout.trim() : "  not found (may be optional for your workflow)");
   });
+  const tdcli = resolve(ROOT, "tools/TwitchDownloaderCLI-bin/TwitchDownloaderCLI");
+  const td = spawnSync("proot-distro", ["login", "debian", "--", tdcli, "--version"], { encoding: "utf8" });
+  const tdOutput = (td.stdout || "") + (td.stderr || "");
+  const tdAvailable = existsSync(tdcli) && tdOutput.includes("TwitchDownloaderCLI");
+  rows.push((tdAvailable ? "✓ " : "– ") + "TwitchDownloaderCLI" + (tdAvailable ? "  " + tdOutput.trim().split(/\r?\n/)[0] : "  unavailable through Debian PRoot"));
+  const whisper = resolve(ROOT, "tools/whisper.cpp/build/bin/whisper-cli");
+  const model = resolve(ROOT, "tools/whisper.cpp/models/ggml-base.bin");
+  rows.push((existsSync(whisper) ? "✓ " : "– ") + "Whisper.cpp" + (existsSync(whisper) ? "  CLI present" : "  CLI missing"));
+  rows.push((existsSync(model) ? "✓ " : "– ") + "Whisper base model" + (existsSync(model) ? "  present" : "  missing"));
   note(rows.join("\n"), "Installed tools");
 }
 

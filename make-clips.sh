@@ -17,11 +17,12 @@ if [ -z "$ID" ]; then
 fi
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-TDCLI="$HOME/TwitchDownloaderCLI-bin/TwitchDownloaderCLI"
+TDCLI="$REPO/tools/TwitchDownloaderCLI-bin/TwitchDownloaderCLI"
 PROOT_ROOT="$PREFIX/var/lib/proot-distro/containers/debian/rootfs/root"
 CHAT_NAME="${ID}_chat.json"
-CHAT="$REPO/$CHAT_NAME"
-OUT="$REPO/clips_$ID"
+CHAT_DIR="$REPO/workspace/chats"
+CHAT="$CHAT_DIR/$CHAT_NAME"
+OUT="$REPO/workspace/clips/$ID"
 DOWNLOADS="/storage/emulated/0/Download"
 
 for cmd in node proot-distro ffmpeg; do
@@ -31,7 +32,7 @@ done
 [ -d "$DOWNLOADS" ] || { echo "No puedo acceder a Descargas. Da permiso de almacenamiento a Termux."; exit 3; }
 [ -x "$REPO/enhance-clip.sh" ] || { echo "Falta enhance-clip.sh"; exit 3; }
 
-mkdir -p "$OUT"
+mkdir -p "$CHAT_DIR" "$OUT"
 rm -f "$OUT"/*.mp4 "$OUT"/*.srt
 
 CHAT_WAS_DOWNLOADED=0

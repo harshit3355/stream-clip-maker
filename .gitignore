@@ -33,3 +33,11 @@ src-tauri/resources/runtime/node.exe
 
 # TypeScript incremental build metadata
 *.tsbuildinfo
+
+# Termux-local tools, credentials and generated workspace (never commit these)
+/config/private/
+/tools/TwitchDownloaderCLI-bin/
+/tools/whisper.cpp/
+/tools/archives/*.zip
+/workspace/*
+!/workspace/README.md

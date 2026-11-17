@@ -11,16 +11,17 @@ if [ -z "$INPUT" ] || [ ! -f "$INPUT" ]; then
   exit 2
 fi
 
-ROOT="$HOME/whisper.cpp"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+ROOT="$SCRIPT_DIR/tools/whisper.cpp"
 WHISPER="$ROOT/build/bin/whisper-cli"
 MODEL="${WHISPER_MODEL:-$ROOT/models/ggml-base.bin}"
 if [ ! -x "$WHISPER" ]; then
-  echo "Falta Whisper.cpp. Compílalo desde ~/whisper.cpp primero."
+  echo "Falta Whisper.cpp. Compílalo desde $ROOT primero."
   exit 3
 fi
 if [ ! -f "$MODEL" ]; then
   echo "Falta el modelo español/multilingüe: $MODEL"
-  echo "Descárgalo con: bash ~/whisper.cpp/models/download-ggml-model.sh base"
+  echo "Descárgalo con: bash $ROOT/models/download-ggml-model.sh base"
   exit 4
 fi
 
